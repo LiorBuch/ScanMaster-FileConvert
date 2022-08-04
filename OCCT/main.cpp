@@ -7,6 +7,15 @@
 #include <TopoDS_Shape.hxx>
 #include <IGESControl_Controller.hxx>
 #include <IGESControl_Writer.hxx>
+#include <STEPControl_Reader.hxx> 
+#include <TopoDS_Shape.hxx> 
+#include <BRepTools.hxx> 
+#include <string.h>
+#include <STEPControl_Writer.hxx>
+#include <STEPControl_Controller.hxx>
+
+using namespace std;
+
 
 TopoDS_Shape igesToOCCT(Standard_CString path_to_iges) {
     IGESControl_Reader myIgesReader;
@@ -37,6 +46,43 @@ void occt_to_iges(const TopoDS_Shape& sh) {
     ICW.ComputeModel();
     Standard_Boolean OK = ICW.Write("MyFile.igs");
     //writes a model to the file MyFile.igs
+}
+
+
+TopoDS_Shape step_to_occt(Standard_CString path_to_step)
+{
+    STEPControl_Reader reader;
+    reader.ReadFile(path_to_step);
+
+    // Loads file MyFile.stp 
+    Standard_Integer NbRoots = reader.NbRootsForTransfer();
+
+    // gets the number of transferable roots 
+    std::cout<<"Number of roots in STEP file : " <<NbRoots <<std::endl;
+
+    Standard_Integer NbTrans = reader.TransferRoots();
+    // translates all transferable roots, and returns the number of    //successful translations 
+    cout<<"STEP roots transferred : "<< NbTrans<<std::endl;
+    cout << "Number of resulting shapes is : "<<reader.NbShapes() <<endl;
+
+    TopoDS_Shape result = reader.OneShape();
+    // obtain the results of translation in one OCCT shape 
+    return result;
+}
+
+void occt_to_step(const TopoDS_Shape& shape) {
+    STEPControl_Writer writer; // init the writer
+    writer.Transfer(shape, STEPControl_ManifoldSolidBrep); //transfer the data from the occt to the writer
+    writer.Write("output.stp"); // write the stp file
+}
+
+
+BOOLEAN mainConvert(string pathToInputFile ,string outputFileFormat) {
+//Todo implament stl to step
+    // look for extansion
+    // 
+
+    return 1;
 }
 
 int main() {
