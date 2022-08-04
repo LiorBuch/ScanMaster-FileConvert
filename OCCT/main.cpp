@@ -13,6 +13,9 @@
 #include <string.h>
 #include <STEPControl_Writer.hxx>
 #include <STEPControl_Controller.hxx>
+#include <StlAPI.hxx>
+#include <StlAPI_Reader.hxx>
+#include <StlAPI_Writer.hxx>
 
 using namespace std;
 
@@ -73,9 +76,22 @@ TopoDS_Shape step_to_occt(Standard_CString path_to_step)
 void occt_to_step(const TopoDS_Shape& shape) {
     STEPControl_Writer writer; // init the writer
     writer.Transfer(shape, STEPControl_ManifoldSolidBrep); //transfer the data from the occt to the writer
-    writer.Write("output.stp"); // write the stp file
+    writer.Write("remiout.step"); // write the stp file
 }
 
+TopoDS_Shape stl_to_occt(const Standard_CString path_to_stl) {
+    StlAPI api;// init the stl reader
+    TopoDS_Shape result; // init the occt obj
+    bool workread = api.Read(result, path_to_stl); // reads the stl into the occt obj
+    cout << workread << endl;
+    return result;
+}
+
+void occt_to_stl(const TopoDS_Shape& shape) {
+    StlAPI api; // init the writer
+    bool workwrite = api.Write(shape, "C:/Users/liorb/source/repos/OCCT/OCCT/bananaz.stl"); // writes the output
+    cout << workwrite;
+}
 
 BOOLEAN mainConvert(string pathToInputFile ,string outputFileFormat) {
 //Todo implament stl to step
@@ -85,8 +101,9 @@ BOOLEAN mainConvert(string pathToInputFile ,string outputFileFormat) {
     return 1;
 }
 
+// test the files
 int main() {
-    Standard_CString str = "C:/Users/liorb/Desktop/goodstuff/testf.igs";
-    TopoDS_Shape shape = igesToOCCT(str);
-    occt_to_iges(shape);
+    Standard_CString str = "C:/Users/liorb/Desktop/goodstuff/banana.stl";
+    TopoDS_Shape shape = stl_to_occt(str);
+    occt_to_stl(shape);
 }
