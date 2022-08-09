@@ -1,8 +1,8 @@
 # ScanMaster-FileConvert
 ## status:
-STEP/STP -----------> Testing
+STEP/STP -----------> Passed but without colors
 
-STL      -----------> In Progress
+STL      -----------> Problem with API function as marked "inefficient"
 
 IGES/IGS -----------> Passed
 
