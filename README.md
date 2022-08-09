@@ -1,12 +1,11 @@
 # ScanMaster-FileConvert
 ## status:
-STEP/STP -----------> Passed but without colors
+STEP/STP -----------> Passed but without colors.
 
-STL      -----------> Problem with API function as marked "inefficient"
+STL      -----------> Can now read from stl. write to stl is unavailable. (triangle_poly?)
 
-IGES/IGS -----------> Passed
+IGES/IGS -----------> Passed.
 
 ## upcoming changes:
-1. test the STEP translator
-2. Finish the stl translator
-3. Write the main translation function //it will use auto detect of the file
+1. Write the main translation function //it will use auto detect of the file type.
+2. fix the stl writer.
