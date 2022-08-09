@@ -14,8 +14,21 @@
 #include <STEPControl_Writer.hxx>
 #include <STEPControl_Controller.hxx>
 #include <StlAPI.hxx>
-#include <StlAPI_Reader.hxx>
-#include <StlAPI_Writer.hxx>
+#include <RWStl.hxx>
+#include <BRepBuilderAPI_Sewing.hxx>
+#include <BRepBuilderAPI_MakeShape.hxx>
+#include <TopoDS_Compound.hxx>
+#include <TopoDS_Edge.hxx>
+#include <TopoDS_Face.hxx>
+#include <TopoDS_Shape.hxx>
+#include <TopoDS_Shell.hxx>
+#include <TopoDS_Vertex.hxx>
+#include <TopoDS_Wire.hxx>
+#include <BRep_Builder.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepBuilderAPI_MakePolygon.hxx>
+#include <BRepBuilderAPI_MakeVertex.hxx>
+#include <BRepBuilderAPI_Sewing.hxx>
 
 using namespace std;
 
@@ -80,20 +93,69 @@ void occt_to_step(const TopoDS_Shape& shape) {
 }
 
 TopoDS_Shape stl_to_occt(const Standard_CString path_to_stl) {
-    StlAPI api;// init the stl reader
-    TopoDS_Shape result; // init the occt obj
-    bool workread = api.Read(result, path_to_stl); // reads the stl into the occt obj
-    cout << workread << endl;
+    TopoDS_Shape result;
+    Handle(Poly_Triangulation) aMesh = RWStl::ReadFile(path_to_stl);
+    if (aMesh.IsNull())
+    {
+        cout << "Error loading file" << endl;
+    }
+
+    TopoDS_Vertex aTriVertexes[3];
+    TopoDS_Face aFace;
+    TopoDS_Wire aWire;
+    BRepBuilderAPI_Sewing aSewingTool;
+    aSewingTool.Init(1.0e-06, Standard_True);
+
+    TopoDS_Compound aComp;
+    BRep_Builder BuildTool;
+    BuildTool.MakeCompound(aComp);
+
+    for (Standard_Integer aTriIdx = 1; aTriIdx <= aMesh->NbTriangles(); ++aTriIdx)
+    {
+        const Poly_Triangle aTriangle = aMesh->Triangle(aTriIdx);
+
+        Standard_Integer anId[3];
+        aTriangle.Get(anId[0], anId[1], anId[2]);
+
+        const gp_Pnt aPnt1 = aMesh->Node(anId[0]);
+        const gp_Pnt aPnt2 = aMesh->Node(anId[1]);
+        const gp_Pnt aPnt3 = aMesh->Node(anId[2]);
+        if (!(aPnt1.IsEqual(aPnt2, 0.0))
+            && !(aPnt1.IsEqual(aPnt3, 0.0)))
+        {
+            aTriVertexes[0] = BRepBuilderAPI_MakeVertex(aPnt1);
+            aTriVertexes[1] = BRepBuilderAPI_MakeVertex(aPnt2);
+            aTriVertexes[2] = BRepBuilderAPI_MakeVertex(aPnt3);
+
+            aWire = BRepBuilderAPI_MakePolygon(aTriVertexes[0], aTriVertexes[1], aTriVertexes[2], Standard_True);
+            if (!aWire.IsNull())
+            {
+                aFace = BRepBuilderAPI_MakeFace(aWire);
+                if (!aFace.IsNull())
+                {
+                    BuildTool.Add(aComp, aFace);
+                }
+            }
+        }
+    }
+
+    aSewingTool.Load(aComp);
+    aSewingTool.Perform();
+    result = aSewingTool.SewedShape();
+    if (result.IsNull())
+    {
+        result = aComp;
+    }
     return result;
 }
 
 void occt_to_stl(const TopoDS_Shape& shape) {
-    StlAPI api; // init the writer
-    bool workwrite = api.Write(shape, "C:/Users/liorb/source/repos/OCCT/OCCT/bananaz.stl"); // writes the output
+   StlAPI api; // init the writer
+   bool workwrite = api.Write(shape, "bananaz.stl"); // writes the output
     cout << workwrite;
 }
 
-BOOLEAN mainConvert(string pathToInputFile ,string outputFileFormat) {
+bool mainConvert(string pathToInputFile ,string outputFileFormat) {
 //Todo implament stl to step
     // look for extansion
     // 
