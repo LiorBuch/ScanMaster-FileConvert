@@ -92,12 +92,11 @@ void occt_to_step(const TopoDS_Shape& shape) {
     writer.Write("remiout.step"); // write the stp file
 }
 
-TopoDS_Shape stl_to_occt(const Standard_CString path_to_stl) {
-    TopoDS_Shape result;
+Standard_Boolean stl_to_occt(const Standard_CString path_to_stl,TopoDS_Shape& result) {
     Handle(Poly_Triangulation) aMesh = RWStl::ReadFile(path_to_stl);
     if (aMesh.IsNull())
     {
-        cout << "Error loading file" << endl;
+        return Standard_False;
     }
 
     TopoDS_Vertex aTriVertexes[3];
@@ -146,7 +145,7 @@ TopoDS_Shape stl_to_occt(const Standard_CString path_to_stl) {
     {
         result = aComp;
     }
-    return result;
+    return Standard_True;
 }
 
 void occt_to_stl(const TopoDS_Shape& shape) {
@@ -165,7 +164,10 @@ bool mainConvert(string pathToInputFile ,string outputFileFormat) {
 
 // test the files
 int main() {
-    Standard_CString str = "C:/Users/liorb/Desktop/goodstuff/banana.stl";
-    TopoDS_Shape shape = stl_to_occt(str);
+    Standard_CString str = "C:/Users/liorb/Desktop/goodstuff/remi.STEP";
+    TopoDS_Shape shape;
+    shape = step_to_occt(str);
     occt_to_stl(shape);
+   
+    cout << shape.IsNull() << endl;
 }
