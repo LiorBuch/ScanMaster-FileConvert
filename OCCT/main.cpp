@@ -33,7 +33,7 @@
 using namespace std;
 
 
-TopoDS_Shape igesToOCCT(Standard_CString path_to_iges) {
+TopoDS_Shape iges_to_occt(Standard_CString path_to_iges) {
     IGESControl_Reader myIgesReader;
     Standard_Integer nIgesFaces, nTransFaces;
 
@@ -53,14 +53,14 @@ TopoDS_Shape igesToOCCT(Standard_CString path_to_iges) {
     return sh;
 }
 
-void occt_to_iges(const TopoDS_Shape& sh) {
+void occt_to_iges(const TopoDS_Shape& sh,string file_path) {
     IGESControl_Controller::Init();
     IGESControl_Writer ICW("MM", 0);
     //creates a writer object for writing in Face mode with  millimeters
     ICW.AddShape(sh);
     //adds shape sh to IGES model
     ICW.ComputeModel();
-    Standard_Boolean OK = ICW.Write("MyFile.igs");
+    Standard_Boolean OK = ICW.Write(file_path.c_str());
     //writes a model to the file MyFile.igs
 }
 
@@ -86,10 +86,10 @@ TopoDS_Shape step_to_occt(Standard_CString path_to_step)
     return result;
 }
 
-void occt_to_step(const TopoDS_Shape& shape) {
+void occt_to_step(const TopoDS_Shape& shape,string file_path) {
     STEPControl_Writer writer; // init the writer
     writer.Transfer(shape, STEPControl_ManifoldSolidBrep); //transfer the data from the occt to the writer
-    writer.Write("remiout.step"); // write the stp file
+    writer.Write(file_path.c_str()); // write the stp file
 }
 
 Standard_Boolean stl_to_occt(const Standard_CString path_to_stl,TopoDS_Shape& result) {
@@ -154,20 +154,33 @@ void occt_to_stl(const TopoDS_Shape& shape) {
     cout << workwrite;
 }
 
-bool mainConvert(string pathToInputFile ,string outputFileFormat) {
-//Todo implament stl to step
-    // look for extansion
-    // 
+bool auto_convert(string path_to_input_file ,string output_file_path) {
+    char dot = '.';
+    TopoDS_Shape output_shape;
 
-    return 1;
+    //find and cut the output file format
+    int dot_index = output_file_path.find(dot);
+    string out_format = output_file_path.substr(dot_index+1, output_file_path.size());
+    std::transform(out_format.begin(), out_format.end(), out_format.begin(),
+        [](unsigned char c) { return std::tolower(c); }); // this will lower case
+    //convert from stl to occt shape
+    stl_to_occt(path_to_input_file.c_str(), output_shape);
+    // decide according to output format what func to use
+    if (out_format=="step"||out_format=="stp")
+    {
+        occt_to_step(output_shape,output_file_path);
+        return 1;
+    }
+    if (out_format=="igs"||out_format=="iges")
+    {
+        occt_to_iges(output_shape,output_file_path);
+        return 1;
+    }
+    return 0;
 }
 
 // test the files
 int main() {
-    Standard_CString str = "C:/Users/liorb/Desktop/goodstuff/remi.STEP";
-    TopoDS_Shape shape;
-    shape = step_to_occt(str);
-    occt_to_stl(shape);
-   
-    cout << shape.IsNull() << endl;
+    Standard_CString str = "C:/Users/liorb/Desktop/goodstuff/testf.igs";
+    mainConvert(str, "C:/Users/liorb/Desktop/goodstuff/banana.iges");
 }
