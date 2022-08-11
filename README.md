@@ -6,6 +6,8 @@ STL      -----------> Can now read from stl. write to stl is unavailable. (trian
 
 IGES/IGS -----------> Passed.
 
+MAIN CONVERT FUNCTION -----------------> Passed.
+
 ## upcoming changes:
-1. Write the main translation function //it will use auto detect of the file type.
+1. Transfer to DLL project.
 2. fix the stl writer.
